@@ -39,7 +39,7 @@ func (s *SqliteStore) NewRegistry(name string, registryInfo model.RegistryMetada
 }
 
 func (s *SqliteStore) AllRegistries() ([]model.Registry, error) {
-	sql := `SELECT name, description FROM registries;` // TODO: join to get the remaining info
+	sql := `SELECT name, description FROM registries WHERE deleted = 0;` // TODO: join to get the remaining info
 	rows, err := s.db.Query(sql)
 	if err != nil {
 		fmt.Println(err)
@@ -59,6 +59,12 @@ func (s *SqliteStore) AllRegistries() ([]model.Registry, error) {
 	return registries, nil
 }
 
+func (s *SqliteStore) DeleteRegistry(name string) error {
+	sql := `UPDATE registries SET deleted = 1 WHERE name = ?;`
+	_, err := s.db.Exec(sql, name)
+	return err
+}
+
 func (s *SqliteStore) GetSqliteVersion() (string, error) {
 	var version string
 	err := s.db.QueryRow("SELECT sqlite_version()").Scan(&version)
@@ -75,6 +81,7 @@ func (s *SqliteStore) createTablesIfNotExists() error {
 		CREATE TABLE IF NOT EXISTS registries (
 			id INTEGER PRIMARY KEY,
 			name TEXT UNIQUE NOT NULL,
+			deleted INTEGER DEFAULT 0,
 			description TEXT
 		);
 
@@ -96,6 +103,7 @@ func (s *SqliteStore) createTablesIfNotExists() error {
 			name TEXT UNIQUE NOT NULL,
 			description TEXT,
 			registry_id INTEGER,
+			deleted INTEGER DEFAULT 0,
 			FOREIGN KEY (registry_id) REFERENCES registries(id) ON DELETE CASCADE
 		);
 
@@ -113,6 +121,7 @@ func (s *SqliteStore) createTablesIfNotExists() error {
 			checksum TEXT,
 			start_partition INT,
 			end_partition INT,
+			deleted INTEGER DEFAULT 0,
 			FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE CASCADE
 		);
 
@@ -120,18 +129,6 @@ func (s *SqliteStore) createTablesIfNotExists() error {
 			package_id INTEGER,
 			admin TEXT,
 			FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE CASCADE
-		);
-
-		CREATE TABLE IF NOT EXISTS deleted_packages (
-			registry_id INTEGER,
-			package_name TEXT,
-			FOREIGN KEY (registry_id) REFERENCES registries(id) ON DELETE CASCADE
-			PRIMARY KEY (registry_id, package_name)
-		);
-
-		CREATE TABLE IF NOT EXISTS deleted_registries (
-			registry_name TEXT,
-			PRIMARY KEY (registry_name)
 		);
 	`)
 	if err != nil {

@@ -97,12 +97,19 @@ func main() {
 		CustomValues: map[string]string{"key": "value"},
 	})
 
+	printAllRegistries(sqlite)
+	sqlite.DeleteRegistry("test-registry")
+	printAllRegistries(sqlite)
+}
+
+func printAllRegistries(sqlite *SqliteStore) {
 	registries, err := sqlite.AllRegistries()
 	if err != nil {
 		log.Fatalf("Failed to get registries: %v", err)
 	}
+	log.Print("registries:")
 	for _, reg := range registries {
-		log.Printf("Registry: %s, Description: %s", reg.Name, reg.Description)
+		log.Printf("- Registry: %s, Description: %s", reg.Name, reg.Description)
 	}
 }
 
