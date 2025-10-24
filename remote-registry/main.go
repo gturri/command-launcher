@@ -79,6 +79,20 @@ func createStore(config *CommandLineArgs) (Store, error) {
 }
 
 func main() {
+	sqlite, err := NewSqliteStore("registry.db")
+	if err != nil {
+		log.Fatalf("Failed to create SQLite store: %v", err)
+	}
+	defer sqlite.Close()
+
+	version, err := sqlite.GetSqliteVersion()
+	if err != nil {
+		log.Fatalf("Failed to get SQLite version: %v", err)
+	}
+	log.Printf("SQLite version: %s", version)
+}
+
+func main2() {
 	config, err := setupCommandLineArgs()
 	if err != nil {
 		log.Fatalf("Failed to set up configuration: %v", err)
