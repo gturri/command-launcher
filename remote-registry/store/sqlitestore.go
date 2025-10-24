@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 
+	model "github.com/criteo/command-launcher/remote-registry/model"
+
 	_ "github.com/glebarez/go-sqlite"
 )
 
@@ -23,6 +25,38 @@ func NewSqliteStore(dbPath string) (*SqliteStore, error) {
 	}
 	store.createTablesIfNotExists()
 	return store, nil
+}
+
+func (s *SqliteStore) NewRegistry(name string, registryInfo model.RegistryMetadata) error {
+	// TODO: ensure we're not trying to insert a registry that already exists
+	sql := `INSERT INTO registries (name, description) VALUES (?, ?);` // TODO: insert the remaining info
+	_, err := s.db.Exec(sql, name, registryInfo.Description)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
+}
+
+func (s *SqliteStore) AllRegistries() ([]model.Registry, error) {
+	sql := `SELECT name, description FROM registries;` // TODO: join to get the remaining info
+	rows, err := s.db.Query(sql)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	var registries []model.Registry
+	for rows.Next() {
+		registry := &model.Registry{}
+		err = rows.Scan(&registry.Name, &registry.Description)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+		registries = append(registries, *registry)
+	}
+	return registries, nil
 }
 
 func (s *SqliteStore) GetSqliteVersion() (string, error) {

@@ -90,6 +90,20 @@ func main() {
 		log.Fatalf("Failed to get SQLite version: %v", err)
 	}
 	log.Printf("SQLite version: %s", version)
+	sqlite.NewRegistry("test-registry", model.RegistryMetadata{
+		Name:         "test-registry",
+		Description:  "Test Registry",
+		Admin:        []string{"a", "b"},
+		CustomValues: map[string]string{"key": "value"},
+	})
+
+	registries, err := sqlite.AllRegistries()
+	if err != nil {
+		log.Fatalf("Failed to get registries: %v", err)
+	}
+	for _, reg := range registries {
+		log.Printf("Registry: %s, Description: %s", reg.Name, reg.Description)
+	}
 }
 
 func main2() {
