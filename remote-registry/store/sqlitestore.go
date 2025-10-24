@@ -3,6 +3,7 @@ package store
 import (
 	"database/sql"
 	"fmt"
+
 	_ "github.com/glebarez/go-sqlite"
 )
 
@@ -11,7 +12,7 @@ type SqliteStore struct {
 }
 
 func NewSqliteStore(dbPath string) (*SqliteStore, error) {
-	db, err := sql.Open("sqlite", dbPath)
+	db, err := sql.Open("sqlite", dbPath+"?_pragma=foreign_keys(1)")
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
