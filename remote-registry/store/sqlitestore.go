@@ -18,9 +18,11 @@ func NewSqliteStore(dbPath string) (*SqliteStore, error) {
 		return nil, err
 	}
 	fmt.Println("SQLite store initialized at", dbPath)
-	return &SqliteStore{
+	store := &SqliteStore{
 		db: db,
-	}, nil
+	}
+	store.createTablesIfNotExists()
+	return store, nil
 }
 
 func (s *SqliteStore) GetSqliteVersion() (string, error) {
@@ -32,6 +34,22 @@ func (s *SqliteStore) GetSqliteVersion() (string, error) {
 	}
 	fmt.Println("SQLite version:", version)
 	return version, nil
+}
+
+func (s *SqliteStore) createTablesIfNotExists() error {
+	_, err := s.db.Exec(`
+CREATE TABLE IF NOT EXISTS registries (
+	id INTEGER PRIMARY KEY,
+	name TEXT UNIQUE NOT NULL,
+	description TEXT
+	);
+	`)
+
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
 }
 
 func (s *SqliteStore) Close() error {
